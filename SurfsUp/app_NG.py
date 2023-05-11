@@ -44,8 +44,8 @@ def welcome():
         f"Daily precipitation record for the last 12 months: /api/v1.0/precipitation<br/>"
         f"List of ovservation stations: /api/v1.0/stations<br/>"
         f"Daily temperature record for the last 12 months:/api/v1.0/tobs<br/>"
-        f"Temperature analysis of the records since 2016-08-23: /api/v1.0/2016-08-23<br/>"
-        f"Temperature analysis of the records between 2016-08-23 and 2016-12-31: /api/v1.0/2016-08-23/2016-12-31<br/>"
+        f"Enter a start date(yyyy-mm-dd) to see the temperature analysis: /api/v1.0/<start><br/>"
+        f"Enter start and end dates (yyyy-mm-dd) to see the temperature analysi: /api/v1.0/<start>/<end><br/>"
     )
 
 # Return the JSON representation of your dictionary
@@ -98,38 +98,47 @@ def temp():
     return jsonify(all_year_temp)    
 
 # Return a JSON list of data for a specified start
-@app.route("/api/v1.0/2016-08-23")
-def start():
+@app.route("/api/v1.0/<start>")
+def temps(start):
     # Using the most active station id from the previous query, calculate the lowest, highest, and average temperature.
+        
     TMIN = session.query(func.min(Measurement.tobs)).\
         filter(Measurement.station == 'USC00519281').\
-        filter(Measurement.date >= '2016-8-23').first()
+        filter(Measurement.date >= start).first()
     
     TMAX = session.query(func.max(Measurement.tobs)).\
         filter(Measurement.station == 'USC00519281').\
-        filter(Measurement.date >= '2016-8-23').first()
+        filter(Measurement.date >= start).first()
     
     TAVG = session.query(func.avg(Measurement.tobs)).\
         filter(Measurement.station == 'USC00519281').\
-        filter(Measurement.date >= '2016-8-23').first()
+        filter(Measurement.date >= start).first()
     
     session.close()
     # Convert your API data to a valid JSON response object
-    return jsonify(f"From 2016-08-23, the minimum temperature is {TMIN}, the average temperature is {TAVG}, and the maximum temperature is {TMAX}")
+    return jsonify(f"From the chosen start date to 2017-08-23, the minimum temperature is {TMIN}, the average temperature is {TAVG}, and the maximum temperature is {TMAX}")
 
 # Return a JSON list of data for a specified start-end range
-@app.route("/api/v1.0/2016-08-23/2016-12-31")
-def start_end():
+@app.route("/api/v1.0/<start>/<end>")
+def temps_1(start, end):
 
     # Using the most active station id from the previous query, calculate the lowest, highest, and average temperature.
+    TMIN = session.query(func.min(Measurement.tobs)).\
+        filter(Measurement.station == 'USC00519281').\
+        filter(Measurement.date >=start).\
+        filter(Measurement.date <=end).first()
     TAVG = session.query(func.avg(Measurement.tobs)).\
         filter(Measurement.station == 'USC00519281').\
-        filter(Measurement.date >='2016-8-23').\
-        filter(Measurement.date <='2016-12-31').first()
+        filter(Measurement.date >=start).\
+        filter(Measurement.date <=end).first()
+    TMAX = session.query(func.max(Measurement.tobs)).\
+        filter(Measurement.station == 'USC00519281').\
+        filter(Measurement.date >=start).\
+        filter(Measurement.date <=end).first()
     
     session.close()
     # Convert your API data to a valid JSON response object
-    return jsonify(f"Between 2016-08-23 and 2016-12-31, the minimum temperature is TMIN, the average temperature is {TAVG} , and the maximum temperature is TMAX ")    
+    return jsonify(f"Between the chosen start and end dates, the minimum temperature is {TMIN}, the average temperature is {TAVG} , and the maximum temperature is {TMAX} ")    
     
 # Define main behavior
 if __name__ == "__main__":
